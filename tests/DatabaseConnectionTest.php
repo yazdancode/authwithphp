@@ -8,7 +8,6 @@ class DatabaseConnectionTest extends TestCase
     {
         global $database_config;
 
-
         $dsn = "mysql:host=$database_config->host;dbname=$database_config->dbname;charset=$database_config->charset";
 
         try {
@@ -17,8 +16,11 @@ class DatabaseConnectionTest extends TestCase
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                 PDO::ATTR_EMULATE_PREPARES => false,
             ]);
-            
-            $this->assertInstanceOf(PDO::class, $pdo); // ✅ اتصال موفق
+
+            // اجرای یک کوئری ساده برای اطمینان از صحت اتصال
+            $stmt = $pdo->query("SELECT 1");
+            $this->assertEquals(1, $stmt->fetchColumn(), "اتصال به دیتابیس برقرار است اما نتایج غیرمنتظره بود.");
+
         } catch (PDOException $e) {
             $this->fail("اتصال به دیتابیس ناموفق بود: " . $e->getMessage());
         }
