@@ -1,0 +1,35 @@
+# Composer dependencies
+/vendor/
+/composer.lock
+
+# Laravel specific
+/storage/
+/.env
+
+# Symfony specific
+/var/
+/.env.local
+
+# Cache and logs
+*.log
+*.cache
+*.tmp
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Node.js dependencies (if applicable)
+node_modules/
+
+# PHPUnit
+.phpunit.result.cache
+
+# Other
+*.bak
+*.orig
