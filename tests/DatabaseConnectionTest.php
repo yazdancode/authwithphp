@@ -1,14 +1,15 @@
 <?php
 use PHPUnit\Framework\TestCase;
+require __DIR__ . '/../config/settings.php';
 
 class DatabaseConnectionTest extends TestCase
 {
     public function testCanConnectToDatabase()
     {
-        require __DIR__ . '/../config/settings.php';
-        require __DIR__ . '/../config/constants.php';
+        global $database_config;
 
-        $dsn = "mysql:host={$database_config->host};dbname={$database_config->dbname};charset={$database_config->charset}";
+
+        $dsn = "mysql:host=$database_config->host;dbname=$database_config->dbname;charset=$database_config->charset";
 
         try {
             $pdo = new PDO($dsn, $database_config->user, $database_config->password, [
