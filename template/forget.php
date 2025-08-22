@@ -1,9 +1,13 @@
+<?php
+require __DIR__ . '/../libs/helpers.php';
+?>
+
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <title>بازیابی رمز عبور</title>
-    <link rel="stylesheet" href="<?php echo assets('css/style.css'); ?>">
+    <link rel="stylesheet" href="<?php echo assets('css/forget.css'); ?>">
 </head>
 <body>
     <div class="container">

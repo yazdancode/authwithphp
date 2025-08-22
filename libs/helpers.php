@@ -2,5 +2,5 @@
 
 function assets(string $path): string
 {
-    return "assets/" . ltrim($path, '');
+    return "../assets/" . ltrim($path, '');
 }
