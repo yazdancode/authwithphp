@@ -1,7 +1,6 @@
 <?php
 
 require 'config/init.php';
-
 $page = $_GET['action'] ?? 'login';
 
 switch ($page) {
