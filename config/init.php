@@ -1,10 +1,10 @@
 <?php
 
-
+global $database_config;
 require 'settings.php';
 require 'constants.php';
-require '../libs/helpers.php';
-global $database_config;
+require_once '../libs/helpers.php';
+
 
 try {
     $dsn = "mysql:host=$database_config->host;dbname=$database_config->dbname;charset=$database_config->charset";
