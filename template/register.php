@@ -67,7 +67,7 @@
                                         <p class="text-start fs-5">If you sign up before:</p>
                                     </div>
                                     <div class="col-6  d-flex justify-content-end">
-                                        <a href="login.html" class="btn btn-success btn-small mb-4">
+                                        <a href="login.php" class="btn btn-success btn-small mb-4">
                                             login
                                         </a>
                                     </div>
