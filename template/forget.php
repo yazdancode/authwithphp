@@ -1,7 +1,3 @@
-<?php
-require __DIR__ . '/../libs/helpers.php';
-?>
-
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
