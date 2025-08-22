@@ -1,5 +1,4 @@
 <?php
-#todo:error function assets with fix besheh
 if (!function_exists('assets')) {
     function assets(string $path): string
     {
