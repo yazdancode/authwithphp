@@ -3,6 +3,7 @@
 global $database_config;
 require 'settings.php';
 require 'constants.php';
+require 'libs/helpers.php';
 
 try {
     $dsn = "mysql:host=$database_config->host;dbname=$database_config->dbname;charset=$database_config->charset";
