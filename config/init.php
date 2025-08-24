@@ -3,7 +3,7 @@
 global $database_config;
 require 'settings.php';
 require 'constants.php';
-require_once '../libs/helpers.php';
+//require BASE_PATH . 'libs/helpers.php';
 
 
 try {

@@ -6,3 +6,4 @@ if (!function_exists('assets')) {
         return $base . 'assets/' . $path;
     }
 }
+
