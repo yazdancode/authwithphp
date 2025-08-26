@@ -25,17 +25,14 @@
                     <div class="card bg-glass">
                         <div class="card-body px-4 py-5 px-md-5">
                             <form action="#" method="post">
-                                <!-- Email input -->
                                 <div class="form-outline mb-4">
                                     <input type="email" name="email" id="email" class="form-control" />
                                     <label class="form-label" for="email">Email address</label>
                                 </div>
-                                <!-- Submit button -->
                                 <button type="submit" class="btn btn-primary btn-block mb-4">
                                     Login
                                 </button>
                                 <hr>
-                                <!-- Register buttons -->
                                 <div class="row mt-4">
                                     <div class="col-6">
                                         <p class="text-start fs-5">If you don't sign up before:</p>
