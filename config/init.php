@@ -1,8 +1,10 @@
 <?php
 
 global $database_config;
+require __DIR__ . '/../libs/helpers.php';
 require 'settings.php';
 require 'constants.php';
+
 
 
 try {
