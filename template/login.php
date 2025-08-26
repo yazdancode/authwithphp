@@ -1,6 +1,7 @@
 <?php
 require __DIR__ . '/../config/init.php';
 ?>
+
 <!DOCTYPE html>
 <html lang="en" dir="rtl">
 <head>
