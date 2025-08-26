@@ -7,5 +7,6 @@
 </head>
 <body>
     <h1 style="text-align: center;">User Profile</h1>
+    <h2></h2>
 </body>
 </html>
