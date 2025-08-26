@@ -2,12 +2,16 @@
 if (!function_exists('assets')) {
     function assets(string $path): string
     {
-        $base = defined('BASE_URL') ? BASE_URL : '';
-        return $base . 'assets/' . $path;
+        $base = defined('BASE_URL') ? rtrim(BASE_URL, '/') . '/' : '';
+        return $base . 'assets/' . ltrim($path, '/');
     }
 }
 
-// $result = assets('js/script.js');
-
-// echo $result;
+if (!function_exists('site_url')) {
+    function site_url(string $uri = ''): string
+    {
+        $base = defined('BASE_URL') ? rtrim(BASE_URL, '/') . '/' : '';
+        return $base . ltrim($uri, '/');
+    }
+}
 
