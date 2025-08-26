@@ -7,3 +7,7 @@ if (!function_exists('assets')) {
     }
 }
 
+// $result = assets('js/script.js');
+
+// echo $result;
+
