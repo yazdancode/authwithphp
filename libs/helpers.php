@@ -55,8 +55,4 @@ if (!function_exists('displayFlashMessage')) {
             unset($_SESSION['success']);
         }
     }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 9afd6b6 (changes repository github and version php)

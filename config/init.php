@@ -1,4 +1,5 @@
 <?php
+global $database_config;
 session_start();
 
 // بارگذاری فایل‌های کمکی و تنظیمات
@@ -21,8 +22,4 @@ try {
     // برای دیباگ می‌توان خطا را در فایل لاگ ذخیره کرد:
     // error_log($e->getMessage());
     exit;
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 9afd6b6 (changes repository github and version php)
