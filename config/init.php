@@ -3,6 +3,7 @@ session_start();
 
 // بارگذاری فایل‌های کمکی و تنظیمات
 require __DIR__ . '/../libs/helpers.php';
+require __DIR__ . '/../libs/auth-lib.php';
 require __DIR__ . '/settings.php';
 require __DIR__ . '/constants.php';
 

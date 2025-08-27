@@ -1,4 +1,5 @@
 <?php
+global $pdo;
 require 'config/init.php';
 
 // نمایش خطاها برای دیباگ
@@ -31,37 +32,32 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         // بررسی ایمیل تکراری
-        $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
-        $stmt->execute([$email]);
-        if ($stmt->rowCount() > 0) {
-            setErrorAndRedirect('این ایمیل قبلاً ثبت شده است!', 'auth.php?action=register');
-        }
+//        $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
+//        $stmt->execute([$email]);
+//        if ($stmt->rowCount() > 0) {
+//            setErrorAndRedirect('این ایمیل قبلاً ثبت شده است!', 'auth.php?action=register');
+//        }
 
         // بررسی شماره موبایل تکراری
-        $stmt = $pdo->prepare("SELECT id FROM users WHERE phone = ?");
-        $stmt->execute([$phone]);
-        if ($stmt->rowCount() > 0) {
-            setErrorAndRedirect('این شماره موبایل قبلاً ثبت شده است!', 'auth.php?action=register');
-        }
+//        $stmt = $pdo->prepare("SELECT id FROM users WHERE phone = ?");
+//        $stmt->execute([$phone]);
+//        if ($stmt->rowCount() > 0) {
+//            setErrorAndRedirect('این شماره موبایل قبلاً ثبت شده است!', 'auth.php?action=register');
+//        }
 
         // ذخیره اطلاعات در دیتابیس
-        try {
-            $stmt = $pdo->prepare("INSERT INTO users (name, email, phone) VALUES (?, ?, ?)");
-            $stmt->execute([$name, $email, $phone]);
-
-            $_SESSION['success'] = 'ثبت‌نام با موفقیت انجام شد!';
-            redirect('auth.php?action=login');
-
-        } catch (PDOException $e) {
-            setErrorAndRedirect('خطا در ثبت اطلاعات: ' . $e->getMessage(), 'auth.php?action=register');
-        }
+//        try {
+//            $stmt = $pdo->prepare("INSERT INTO users (name, email, phone) VALUES (?, ?, ?)");
+//            $stmt->execute([$name, $email, $phone]);
+//
+//            $_SESSION['success'] = 'ثبت‌نام با موفقیت انجام شد!';
+//            redirect('auth.php?action=login');
+//
+//        } catch (PDOException $e) {
+//            setErrorAndRedirect('خطا در ثبت اطلاعات: ' . $e->getMessage(), 'auth.php?action=register');
+//        }
     }
 }
-
-
-
-
-
 // گرفتن پارامتر action
 $page = $_GET['action'] ?? 'login';
 
