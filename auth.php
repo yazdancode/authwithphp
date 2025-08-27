@@ -84,4 +84,8 @@ if (file_exists($file)) {
     include $file;
 } else {
     echo "صفحه مورد نظر یافت نشد!";
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 9afd6b6 (changes repository github and version php)

@@ -8,4 +8,8 @@ if (file_exists($file)) {
     require $file;
 } else {
     require __DIR__ . '/template/not-found.php';
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 9afd6b6 (changes repository github and version php)

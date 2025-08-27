@@ -6,4 +6,8 @@ $database_config = (object)[
     'password' => '',
     'dbname' => '7auth',
     'charset' => 'utf8mb4'
+<<<<<<< HEAD
 ];
+=======
+];
+>>>>>>> 9afd6b6 (changes repository github and version php)
