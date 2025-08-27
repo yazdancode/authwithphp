@@ -7,7 +7,6 @@ class DatabaseConnectionTest extends TestCase
     public function testCanConnectToDatabase()
     {
         global $database_config;
-
         $dsn = "mysql:host=$database_config->host;dbname=$database_config->dbname;charset=$database_config->charset";
 
         try {
