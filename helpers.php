@@ -1,5 +1,5 @@
 <?php
-// تابع برای مسیر فایل‌های assets
+
 if (!function_exists('assets')) {
     function assets(string $path): string
     {
@@ -8,7 +8,6 @@ if (!function_exists('assets')) {
     }
 }
 
-// تابع برای مسیر صفحات سایت
 if (!function_exists('site_url')) {
     function site_url(string $uri = ''): string
     {
@@ -17,7 +16,6 @@ if (!function_exists('site_url')) {
     }
 }
 
-// تابع برای هدایت کاربر به صفحه دیگر
 if (!function_exists('redirect')) {
     function redirect(string $target = BASE_URL)
     {
@@ -26,7 +24,6 @@ if (!function_exists('redirect')) {
     }
 }
 
-// تابع برای ذخیره پیام خطا در سشن و هدایت کاربر
 if (!function_exists('setErrorAndRedirect')) {
     function setErrorAndRedirect(string $message, string $target)
     {
@@ -35,7 +32,6 @@ if (!function_exists('setErrorAndRedirect')) {
     }
 }
 
-// تابع برای نمایش پیام خطا یا موفقیت از سشن و پاک کردن آن
 if (!function_exists('displayFlashMessage')) {
     function displayFlashMessage()
     {
