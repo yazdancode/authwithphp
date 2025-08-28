@@ -1,114 +1,102 @@
 <?php
-session_start();
-global $pdo;
-require 'config/init.php';
 
-// نمایش خطاها برای دیباگ
+use JetBrains\PhpStorm\NoReturn;
+
+require 'config/init.php';
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// تابع هدایت
+// ----------------------------------
+// توابع کمکی
+// ----------------------------------
 if (!function_exists('redirect')) {
-    function redirect(string $target = BASE_URL) {
+    #[NoReturn]
+    function redirect(string $target = BASE_URL): void
+    {
         header('Location: ' . $target);
         exit;
     }
 }
 
-// تابع نمایش خطا و هدایت
 if (!function_exists('setErrorAndRedirect')) {
-    function setErrorAndRedirect(string $message, string $target) {
+    #[NoReturn]
+    function setErrorAndRedirect(string $message, string $target): void
+    {
         $_SESSION['error'] = $message;
         redirect($target);
     }
 }
 
-// تابع بررسی تکراری بودن کاربر
-if (!function_exists('userExists')) {
-    function userExists(string $email, string $phone): bool {
-        global $pdo;
-        $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ? OR phone = ?");
-        $stmt->execute([$email, $phone]);
-        return $stmt->rowCount() > 0;
+// ----------------------------------
+// ثبت نام کاربر
+// ----------------------------------
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'register') {
+
+    $name  = trim($_POST['name'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $phone = trim($_POST['phone'] ?? '');
+
+    // اعتبارسنجی فیلدها
+    if (empty($name) || empty($email) || empty($phone)) {
+        setErrorAndRedirect('لطفاً همه فیلدها را پر کنید!', 'auth.php?action=register');
     }
+
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        setErrorAndRedirect('ایمیل وارد شده معتبر نیست!', 'auth.php?action=register');
+    }
+
+    if (userExists($email, $phone)) {
+        setErrorAndRedirect('ایمیل یا شماره موبایل وارد شده قبلاً ثبت شده است!', 'auth.php?action=register');
+    }
+
+    // ایجاد کاربر
+    $userData = ['name' => $name, 'email' => $email, 'phone' => $phone];
+    createUser($userData);
 }
 
-// تابع ایجاد کاربر
-if (!function_exists('createUser')) {
-    function createUser(array $userData): bool {
-        global $pdo;
-        try {
-            $stmt = $pdo->prepare("INSERT INTO users (name, email, phone) VALUES (?, ?, ?)");
-            $stmt->execute([
-                $userData['name'],
-                $userData['email'],
-                $userData['phone']
-            ]);
-            return true;
-        } catch (PDOException $e) {
-            setErrorAndRedirect('خطا در ثبت اطلاعات: ' . $e->getMessage(), 'auth.php?action=register');
-        }
+// ----------------------------------
+// بررسی صفحه verify
+// ----------------------------------
+if (isset($_GET['action']) && $_GET['action'] === 'verify' && !empty($_SESSION['email'])) {
+
+    if (!userExistsByEmail($_SESSION['email'])) {
+        setErrorAndRedirect('ابتدا باید ثبت‌نام کنید یا وارد شوید!', 'auth.php?action=login');
     }
+
+    if (isset($_SESSION['hash']) && isAliveToken($_SESSION['hash'])) {
+        # پیدا کردن توکن قدیمی
+        $oldToken = findTokenByHash($_SESSION['hash']);
+        $token = $oldToken['token'];
+
+        # اینجا می‌تونی بفرستی برای کاربر (ایمیل / SMS)
+        // sendToken($_SESSION['email'], $token);
+
+    } else {
+        # ساخت توکن جدید
+        $tokenResult = generateToken();
+        $_SESSION['hash']  = $tokenResult['hash'];
+        $_SESSION['token'] = $tokenResult['token'];
+
+        # ارسال به کاربر
+        // sendToken($_SESSION['email'], $tokenResult['token']);
+    }
+
+    include 'template/verify.php';
 }
 
-// پردازش فرم ثبت‌نام
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $action = $_GET['action'] ?? '';
-    $params = $_POST;
 
-    if ($action == 'register') {
-        $name  = trim($params['name'] ?? '');
-        $email = trim($params['email'] ?? '');
-        $phone = trim($params['phone'] ?? '');
 
-        // بررسی خالی بودن فیلدها
-        if (empty($name) || empty($email) || empty($phone)) {
-            setErrorAndRedirect('لطفاً همه فیلدها را پر کنید!', 'auth.php?action=register');
-        }
-
-        // اعتبارسنجی ایمیل
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            setErrorAndRedirect('ایمیل وارد شده معتبر نیست!', 'auth.php?action=register');
-        }
-
-        // بررسی تکراری بودن ایمیل یا شماره موبایل
-        if (userExists($email, $phone)) {
-            setErrorAndRedirect('ایمیل یا شماره موبایل وارد شده قبلاً ثبت شده است!', 'auth.php?action=register');
-        }
-
-        // ایجاد کاربر و هدایت به صفحه verify
-        $userData = [
-            'name'  => $name,
-            'email' => $email,
-            'phone' => $phone
-        ];
-
-        if (createUser($userData)) {
-            $_SESSION['email'] = $email;
-            redirect('auth.php?action=verify');
-        }
-    }
-}
-
-// گرفتن پارامتر action
+// ----------------------------------
+// بارگذاری صفحه مناسب
+// ----------------------------------
 $page = $_GET['action'] ?? 'login';
+$file = match ($page) {
+    'register' => 'template/register.php',
+    'verify' => 'template/verify.php',
+    default => 'template/login.php',
+};
 
-// انتخاب فایل مناسب بر اساس action
-switch ($page) {
-    case 'register':
-        $file = 'template/register.php';
-        break;
-    case 'verify':
-        $file = 'template/verify.php';
-        break;
-    case 'login':
-    default:
-        $file = 'template/login.php';
-        break;
-}
-
-// include صفحه انتخاب‌شده
 if (file_exists($file)) {
     include $file;
 } else {

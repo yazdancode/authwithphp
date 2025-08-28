@@ -1,14 +1,13 @@
 <?php
 global $database_config;
 session_start();
+date_default_timezone_set('Asia/Tehran');
 
-// بارگذاری فایل‌های کمکی و تنظیمات
 require __DIR__ . '/../libs/helpers.php';
 require __DIR__ . '/../libs/auth-lib.php';
 require __DIR__ . '/settings.php';
 require __DIR__ . '/constants.php';
 
-// اتصال به دیتابیس با PDO
 try {
     $dsn = "mysql:host={$database_config->host};dbname={$database_config->dbname};charset={$database_config->charset}";
     $pdo = new PDO($dsn, $database_config->user, $database_config->password, [
@@ -17,9 +16,7 @@ try {
         PDO::ATTR_EMULATE_PREPARES => false,
     ]);
 } catch (PDOException $e) {
-    // نمایش خطای عمومی به کاربر
     echo "اتصال به دیتابیس ناموفق بود.";
-    // برای دیباگ می‌توان خطا را در فایل لاگ ذخیره کرد:
-    // error_log($e->getMessage());
+//    error_log($e->getMessage());
     exit;
 }

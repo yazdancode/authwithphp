@@ -1,9 +1,6 @@
 <?php
-// گرفتن پیام خطا یا موفقیت از سشن
 $errorMsg = $_SESSION['error'] ?? '';
 $successMsg = $_SESSION['success'] ?? '';
-
-// پاک کردن پیام‌ها از سشن بعد از خواندن
 unset($_SESSION['error'], $_SESSION['success']);
 ?>
 <!DOCTYPE html>
@@ -13,9 +10,9 @@ unset($_SESSION['error'], $_SESSION['success']);
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>صفحه ثبت نام</title>
     <link rel="stylesheet" href="<?= assets('css/style.css') ?>">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/4.2.0/mdb.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/4.2.0/mdb.min.css" rel="stylesheet"/>
 </head>
 <body>
 <section class="background-radial-gradient overflow-hidden">
@@ -32,7 +29,6 @@ unset($_SESSION['error'], $_SESSION['success']);
                 <div id="radius-shape-2" class="position-absolute shadow-5-strong"></div>
                 <div class="card bg-glass">
                     <div class="card-body px-4 py-5 px-md-5">
-
                         <!-- نمایش پیام خطا -->
                         <?php if(!empty($errorMsg)): ?>
                             <div class="alert alert-danger alert-dismissible fade show" role="alert" id="errorAlert">
@@ -40,7 +36,6 @@ unset($_SESSION['error'], $_SESSION['success']);
                                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="بستن"></button>
                             </div>
                         <?php endif; ?>
-
                         <!-- نمایش پیام موفقیت -->
                         <?php if(!empty($successMsg)): ?>
                             <div class="alert alert-success alert-dismissible fade show" role="alert" id="successAlert">
@@ -65,11 +60,8 @@ unset($_SESSION['error'], $_SESSION['success']);
                                 <input type="email" name="email" id="email" class="form-control" value="<?= $_POST['email'] ?? '' ?>" />
                                 <label class="form-label" for="email">ایمیل</label>
                             </div>
-
                             <button type="submit" class="btn btn-primary btn-block mb-4">ثبت نام</button>
-
                             <hr>
-
                             <div class="row mt-4">
                                 <div class="col-6">
                                     <p class="text-start fs-5">قبلاً ثبت‌نام کرده‌اید؟</p>
@@ -79,23 +71,17 @@ unset($_SESSION['error'], $_SESSION['success']);
                                 </div>
                             </div>
                         </form>
-
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
 </section>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/4.2.0/mdb.min.js"></script>
-
 <script>
-// ناپدید شدن خودکار آلارم‌ها بعد از 5 ثانیه
 setTimeout(() => {
     const errorAlert = document.getElementById('errorAlert');
     if(errorAlert) errorAlert.style.display = 'none';
-
     const successAlert = document.getElementById('successAlert');
     if(successAlert) successAlert.style.display = 'none';
 }, 5000);
