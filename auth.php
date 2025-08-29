@@ -77,11 +77,9 @@ if (isset($_GET['action']) && $_GET['action'] === 'verify' && !empty($_SESSION['
         $tokenResult = generateToken();
         $_SESSION['hash']  = $tokenResult['hash'];
         $_SESSION['token'] = $tokenResult['token'];
-
         # ارسال به کاربر
         // sendToken($_SESSION['email'], $tokenResult['token']);
     }
-
     include 'template/verify.php';
 }
 
