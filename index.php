@@ -2,7 +2,7 @@
 require __DIR__ . '/config/init.php';
 $url = $_GET['url'] ?? 'login';
 $url = trim($url, '/');
-$file = __DIR__ . "/template/{$url}.php";
+$file = __DIR__ . "/template/$url.php";
 
 if (file_exists($file)) {
     require $file;

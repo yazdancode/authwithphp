@@ -80,7 +80,6 @@ if ($action === 'verify' && !empty($_SESSION['email'])) {
     if (!userExists('email', $_SESSION['email'])) {
         setErrorAndRedirect('ابتدا باید ثبت‌نام کنید یا وارد شوید!', 'auth.php?action=login');
     }
-
     $tokenResult = getOrCreateToken();
     // ارسال توکن به کاربر
     // sendToken($_SESSION['email'], $tokenResult['token']);
