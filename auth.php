@@ -7,9 +7,9 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// ----------------------------------
-// توابع کمکی
-// ----------------------------------
+// ---------------------------
+// helper redirect / flash
+// ---------------------------
 if (!function_exists('redirect')) {
     #[NoReturn]
     function redirect(string $target = BASE_URL): void
@@ -28,16 +28,39 @@ if (!function_exists('setErrorAndRedirect')) {
     }
 }
 
-// ----------------------------------
-// ثبت نام کاربر
-// ----------------------------------
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'register') {
+if (!function_exists('setSuccessAndRedirect')) {
+    #[NoReturn]
+    function setSuccessAndRedirect(string $message, string $target): void
+    {
+        $_SESSION['success'] = $message;
+        redirect($target);
+    }
+}
 
+// ---------------------------
+// helper token
+// ---------------------------
+function getOrCreateToken(): array {
+    if (!empty($_SESSION['hash']) && isAliveToken($_SESSION['hash'])) {
+        $oldToken = findTokenByHash($_SESSION['hash']);
+        return ['hash' => $_SESSION['hash'], 'token' => $oldToken['token']];
+    }
+    $newToken = generateToken();
+    $_SESSION['hash']  = $newToken['hash'];
+    $_SESSION['token'] = $newToken['token'];
+    return $newToken;
+}
+
+// ---------------------------
+// action اصلی
+// ---------------------------
+$action = $_GET['action'] ?? 'login';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'register') {
     $name  = trim($_POST['name'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $phone = trim($_POST['phone'] ?? '');
 
-    // اعتبارسنجی فیلدها
     if (empty($name) || empty($email) || empty($phone)) {
         setErrorAndRedirect('لطفاً همه فیلدها را پر کنید!', 'auth.php?action=register');
     }
@@ -46,53 +69,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'regist
         setErrorAndRedirect('ایمیل وارد شده معتبر نیست!', 'auth.php?action=register');
     }
 
-    if (userExists($email, $phone)) {
+    if (userExists('email', $email) || userExists('phone', $phone)) {
         setErrorAndRedirect('ایمیل یا شماره موبایل وارد شده قبلاً ثبت شده است!', 'auth.php?action=register');
     }
 
-    // ایجاد کاربر
-    $userData = ['name' => $name, 'email' => $email, 'phone' => $phone];
-    createUser($userData);
+    createUser(['name'=>$name,'email'=>$email,'phone'=>$phone]);
 }
 
-// ----------------------------------
-// بررسی صفحه verify
-// ----------------------------------
-if (isset($_GET['action']) && $_GET['action'] === 'verify' && !empty($_SESSION['email'])) {
-
-    if (!userExistsByEmail($_SESSION['email'])) {
+if ($action === 'verify' && !empty($_SESSION['email'])) {
+    if (!userExists('email', $_SESSION['email'])) {
         setErrorAndRedirect('ابتدا باید ثبت‌نام کنید یا وارد شوید!', 'auth.php?action=login');
     }
 
-    if (isset($_SESSION['hash']) && isAliveToken($_SESSION['hash'])) {
-        # پیدا کردن توکن قدیمی
-        $oldToken = findTokenByHash($_SESSION['hash']);
-        $token = $oldToken['token'];
+    $tokenResult = getOrCreateToken();
+    // ارسال توکن به کاربر
+    // sendToken($_SESSION['email'], $tokenResult['token']);
 
-        # اینجا می‌تونی بفرستی برای کاربر (ایمیل / SMS)
-        // sendToken($_SESSION['email'], $token);
-
-    } else {
-        # ساخت توکن جدید
-        $tokenResult = generateToken();
-        $_SESSION['hash']  = $tokenResult['hash'];
-        $_SESSION['token'] = $tokenResult['token'];
-        # ارسال به کاربر
-        // sendToken($_SESSION['email'], $tokenResult['token']);
-    }
     include 'template/verify.php';
 }
 
-
-
-// ----------------------------------
+// ---------------------------
 // بارگذاری صفحه مناسب
-// ----------------------------------
-$page = $_GET['action'] ?? 'login';
-$file = match ($page) {
+// ---------------------------
+$file = match ($action) {
     'register' => 'template/register.php',
-    'verify' => 'template/verify.php',
-    default => 'template/login.php',
+    'verify'   => 'template/verify.php',
+    default    => 'template/login.php',
 };
 
 if (file_exists($file)) {
