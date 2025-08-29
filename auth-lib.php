@@ -1,6 +1,6 @@
 <?php
 // ----------------------------------
-// helper برای اجرای کوئری
+// DB helpers
 // ----------------------------------
 if (!function_exists('dbFetch')) {
     function dbFetch(string $sql, array $params = []): ?array {
@@ -21,14 +21,13 @@ if (!function_exists('dbExecute')) {
 }
 
 // ----------------------------------
-// بررسی وجود کاربر
+// Check if user exists
 // ----------------------------------
 if (!function_exists('userExists')) {
     function userExists(string $field, string $value): bool {
         $allowedFields = ['email', 'phone'];
-        if (!in_array($field, $allowedFields)) {
-            return false;
-        }
+        if (!in_array($field, $allowedFields)) return false;
+
         $sql = "SELECT id FROM users WHERE $field = :value LIMIT 1";
         $result = dbFetch($sql, [':value' => $value]);
         return $result !== null;
@@ -36,13 +35,17 @@ if (!function_exists('userExists')) {
 }
 
 // ----------------------------------
-// ایجاد کاربر جدید
+// Create new user
 // ----------------------------------
 if (!function_exists('createUser')) {
     function createUser(array $userData): void {
         try {
             $sql = "INSERT INTO users (name, email, phone) VALUES (:name, :email, :phone)";
-            dbExecute($sql, [':name'  => $userData['name'], ':email' => $userData['email'], ':phone' => $userData['phone']]);
+            dbExecute($sql, [
+                ':name'  => $userData['name'],
+                ':email' => $userData['email'],
+                ':phone' => $userData['phone']
+            ]);
             $_SESSION['success'] = 'ثبت‌نام با موفقیت انجام شد!';
             $_SESSION['email'] = $userData['email'];
             redirect('auth.php?action=verify');
@@ -53,7 +56,7 @@ if (!function_exists('createUser')) {
 }
 
 // ----------------------------------
-// حذف کاربر
+// Delete user
 // ----------------------------------
 if (!function_exists('deleteUser')) {
     function deleteUser(int $userId): bool {
@@ -67,18 +70,25 @@ if (!function_exists('deleteUser')) {
 }
 
 // ----------------------------------
-// token
+// Token helpers
 // ----------------------------------
 if (!function_exists('generateToken')) {
     function generateToken(int $length = 32): array {
         try {
             $hash = bin2hex(random_bytes($length));
-            $token = rand(100000, 999999);
-            $create_at = date("Y-m-d H:i:s", time() + 600);
-            $sql = "INSERT INTO tokens (token, hash, create_at) VALUES (:token, :hash, :create_at)";
-            dbExecute($sql, [':token'=> $token, ':hash'=> $hash, ':create_at' => $create_at]);
+            $token = random_int(100000, 999999);
+            $expiresAt = date("Y-m-d H:i:s", time() + 600); // 10 minutes expiry
+
+            $sql = "INSERT INTO tokens (token, hash, expires_at) VALUES (:token, :hash, :expires_at)";
+            dbExecute($sql, [
+                ':token'=> $token,
+                ':hash'=> $hash,
+                ':expires_at' => $expiresAt
+            ]);
+
             return ['token' => $token, 'hash' => $hash];
-        } catch (Exception) {
+        } catch (Exception $e) {
+            error_log('Token generation error: ' . $e->getMessage());
             return [];
         }
     }
@@ -93,10 +103,49 @@ if (!function_exists('findTokenByHash')) {
 if (!function_exists('isAliveToken')) {
     function isAliveToken(string $hash): bool {
         $token = findTokenByHash($hash);
-        if (!$token) {
-            return false;
-        }
-        return strtotime($token['create_at']) > time();
+        if (!$token) return false;
+        return strtotime($token['expires_at']) > time();
     }
 }
+
+if (!function_exists('sendTokenByEmail')) {
+    if (!function_exists('sendTokenByEmail')) {
+        function sendTokenByEmail(string $email, string|int $token): bool {
+            global $phpmailer;
+
+            try {
+                // Clear previous recipients
+                $phpmailer->clearAddresses();
+
+                // Add recipient
+                $phpmailer->addAddress($email);
+
+                // Email content
+                $phpmailer->Subject = '7auth verify token';
+                $phpmailer->Body = "<h1>Your token is: $token</h1>";
+
+                // Attempt to send email
+                if ($phpmailer->send()) {
+                    return true;
+                }
+
+                // Handle Mailtrap "too many emails" error
+                if (str_contains($phpmailer->ErrorInfo, 'Too many emails')) {
+                    error_log('Mailtrap limit reached, email skipped.');
+                    return false;
+                }
+
+                // Other errors
+                error_log('Email sending error: ' . $phpmailer->ErrorInfo);
+                return false;
+
+            } catch (Exception $e) {
+                error_log('Email exception: ' . $e->getMessage());
+                return false;
+            }
+        }
+    }
+
+}
+
 
