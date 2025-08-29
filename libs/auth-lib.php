@@ -42,16 +42,10 @@ if (!function_exists('createUser')) {
     function createUser(array $userData): void {
         try {
             $sql = "INSERT INTO users (name, email, phone) VALUES (:name, :email, :phone)";
-            dbExecute($sql, [
-                ':name'  => $userData['name'],
-                ':email' => $userData['email'],
-                ':phone' => $userData['phone']
-            ]);
-
+            dbExecute($sql, [':name'  => $userData['name'], ':email' => $userData['email'], ':phone' => $userData['phone']]);
             $_SESSION['success'] = 'ثبت‌نام با موفقیت انجام شد!';
             $_SESSION['email'] = $userData['email'];
             redirect('auth.php?action=verify');
-
         } catch (PDOException $e) {
             setErrorAndRedirect('خطا در ثبت اطلاعات: ' . $e->getMessage(), 'auth.php?action=register');
         }
@@ -81,14 +75,8 @@ if (!function_exists('generateToken')) {
             $hash = bin2hex(random_bytes($length));
             $token = rand(100000, 999999);
             $create_at = date("Y-m-d H:i:s", time() + 600);
-
             $sql = "INSERT INTO tokens (token, hash, create_at) VALUES (:token, :hash, :create_at)";
-            dbExecute($sql, [
-                ':token'     => $token,
-                ':hash'      => $hash,
-                ':create_at' => $create_at
-            ]);
-
+            dbExecute($sql, [':token'=> $token, ':hash'=> $hash, ':create_at' => $create_at]);
             return ['token' => $token, 'hash' => $hash];
         } catch (Exception) {
             return [];
@@ -108,6 +96,7 @@ if (!function_exists('isAliveToken')) {
         if (!$token) {
             return false;
         }
-        return ($token['create_at'] > date("Y-m-d H:i:s"));
+        return strtotime($token['create_at']) > time();
     }
 }
+
