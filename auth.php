@@ -80,12 +80,21 @@ if ($action === 'verify' && !empty($_SESSION['email'])) {
     if (!userExists('email', $_SESSION['email'])) {
         setErrorAndRedirect('ابتدا باید ثبت‌نام کنید یا وارد شوید!', 'auth.php?action=login');
     }
+
     $tokenResult = getOrCreateToken();
+
+    if (empty($tokenResult['token'])) {
+        setErrorAndRedirect('خطا در تولید توکن، لطفا دوباره تلاش کنید.', 'auth.php?action=login');
+    }
     // ارسال توکن به کاربر
-    // sendToken($_SESSION['email'], $tokenResult['token']);
+    sendTokenByEmail($_SESSION['email'], $tokenResult['token']);
+    sleep(1);
+
+    $_SESSION['hash'] = $tokenResult['hash'];
 
     include 'template/verify.php';
 }
+
 
 // ---------------------------
 // بارگذاری صفحه مناسب
