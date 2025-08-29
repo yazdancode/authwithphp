@@ -3,13 +3,24 @@ global $phpmailer;
 require 'config/init.php';
 
 
-try {
-    $result = $phpmailer->addAddress('yshabanei@gmail.com', 'yazdan');
-    $phpmailer->Subject = 'test gi d khomeni';
-    $phpmailer->Body = 'salam gi d khomeni';
-    $result = $phpmailer->send();
-    var_dump($result);
-    echo 'Email sent successfully!';
-} catch (Exception $e) {
-    echo "Message could not be sent. Mailer Error: $phpmailer->ErrorInfo";
+$emails = [
+    ['email' => 'yshabanei@gmail.com', 'name' => 'yazdan'],
+    ['email' => 'test@example.com', 'name' => 'Test User'],
+];
+
+foreach ($emails as $recipient) {
+    try {
+        $phpmailer->clearAddresses();
+        $phpmailer->addAddress($recipient['email'], $recipient['name']);
+        $phpmailer->Subject = 'Test Email';
+        $phpmailer->Body    = 'Salam, in yek test ast.';
+
+        $sent = $phpmailer->send();
+        echo "Email to {$recipient['email']} sent: " . ($sent ? "OK" : "Failed") . "<br>";
+
+        sleep(2); // فاصله دو ثانیه بین ایمیل‌ها
+    } catch (Exception $e) {
+        echo "Message could not be sent to {$recipient['email']}. Error: {$phpmailer->ErrorInfo}<br>";
+    }
 }
+
