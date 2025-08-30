@@ -38,7 +38,7 @@ if (!function_exists('setSuccessAndRedirect')) {
 }
 
 // ---------------------------
-// DB helpers - اضافه شده
+// DB helpers
 // ---------------------------
 if (!function_exists('dbFetch')) {
     function dbFetch(string $sql, array $params = []): ?array {
@@ -70,7 +70,7 @@ if (!function_exists('dbExecute')) {
 }
 
 // ---------------------------
-// Check if user exists - اضافه شده
+// Check if user exists
 // ---------------------------
 if (!function_exists('userExists')) {
     function userExists(string $field, string $value): bool {
@@ -84,19 +84,17 @@ if (!function_exists('userExists')) {
 }
 
 // ---------------------------
-// Create new user - اضافه شده
+// Create new user
 // ---------------------------
 if (!function_exists('createUser')) {
     function createUser(array $userData): bool {
         try {
             $sql = "INSERT INTO users (name, email, phone) VALUES (:name, :email, :phone)";
-            $success = dbExecute($sql, [
+            return dbExecute($sql, [
                 ':name'  => $userData['name'],
                 ':email' => $userData['email'],
                 ':phone' => $userData['phone']
             ]);
-
-            return $success;
         } catch (PDOException $e) {
             error_log('Create User Error: ' . $e->getMessage());
             return false;
@@ -105,7 +103,7 @@ if (!function_exists('createUser')) {
 }
 
 // ---------------------------
-// توکن helpers - کاملاً اصلاح شده
+// Token helpers
 // ---------------------------
 if (!function_exists('generateToken')) {
     function generateToken(string $email): array {
@@ -114,16 +112,17 @@ if (!function_exists('generateToken')) {
             $token = random_int(100000, 999999);
             $expiresAt = date("Y-m-d H:i:s", time() + 600); // 10 minutes expiry
 
-            // حذف توکن‌های قبلی برای این ایمیل
+            // حذف توکن‌های قبلی
             dbExecute("DELETE FROM tokens WHERE email = :email", [':email' => $email]);
 
             // درج توکن جدید
-            $sql = "INSERT INTO tokens (email, token, hash, create_at) VALUES (:email, :token, :hash, :create_at)";
+            $sql = "INSERT INTO tokens (email, token, hash, expires_at, created_at) 
+                    VALUES (:email, :token, :hash, :expires_at, NOW())";
             $success = dbExecute($sql, [
-                ':email' => $email,
-                ':token' => $token,
-                ':hash' => $hash,
-                ':create_at	' => $expiresAt
+                ':email'      => $email,
+                ':token'      => $token,
+                ':hash'       => $hash,
+                ':expires_at' => $expiresAt
             ]);
 
             if (!$success) {
@@ -149,34 +148,22 @@ if (!function_exists('isAliveToken')) {
     function isAliveToken(string $hash): bool {
         $token = findTokenByHash($hash);
         if (!$token) return false;
-        return strtotime($token['create_at']) > time();
+        return strtotime($token['expires_at']) > time();
     }
 }
 
 if (!function_exists('sendTokenByEmail')) {
     function sendTokenByEmail(string $email, string $token): bool {
         global $phpmailer;
-
         try {
-            // Clear previous recipients
             $phpmailer->clearAddresses();
-
-            // Add recipient
             $phpmailer->addAddress($email);
 
-            // Email content
             $phpmailer->Subject = 'کد تأیید 7auth';
             $phpmailer->Body = "<h1>کد تأیید شما: $token</h1><p>این کد تا ۱۰ دقیقه معتبر است.</p>";
             $phpmailer->isHTML(true);
 
-            // Attempt to send email
-            if ($phpmailer->send()) {
-                return true;
-            }
-
-            error_log('Email sending error: ' . $phpmailer->ErrorInfo);
-            return false;
-
+            return $phpmailer->send();
         } catch (Exception $e) {
             error_log('Email exception: ' . $e->getMessage());
             return false;
@@ -188,53 +175,26 @@ if (!function_exists('verifyToken')) {
     function verifyToken(string $hash, string $enteredCode): bool {
         $token = findTokenByHash($hash);
 
-        if (!$token) {
-            error_log("توکن با هش داده شده یافت نشد: $hash");
-            return false;
-        }
+        if (!$token) return false;
 
-        // بررسی انقضای توکن
-        if (strtotime($token['created_at']) < time()) {
-            error_log("توکن منقضی شده: $hash");
-            return false;
-        }
+        if (strtotime($token['expires_at']) < time()) return false;
 
-        // تبدیل هر دو مقدار به رشته برای مقایسه صحیح
-        $storedToken = (string)$token['token'];
-        $enteredCode = (string)$enteredCode;
-
-        // بررسی تطابق کد
-        if ($storedToken !== $enteredCode) {
-            error_log("کد وارد شده با توکن مطابقت ندارد: $enteredCode != $storedToken");
-            return false;
-        }
-
-        return true;
+        return (string)$token['token'] === (string)$enteredCode;
     }
 }
 
-// ---------------------------
-// helper token - اصلاح شده
-// ---------------------------
 function getOrCreateToken($email): array {
-    // بررسی وجود توکن فعال برای این ایمیل
-    $existingToken = dbFetch("SELECT * FROM tokens WHERE email = :email AND create_at > NOW()", [':email' => $email]);
+    $existingToken = dbFetch("SELECT * FROM tokens WHERE email = :email AND expires_at > NOW()", [':email' => $email]);
 
     if ($existingToken) {
         return ['hash' => $existingToken['hash'], 'token' => $existingToken['token']];
     }
 
-    // ایجاد توکن جدید
-    $newToken = generateToken($email);
-    if (empty($newToken)) {
-        return [];
-    }
-
-    return $newToken;
+    return generateToken($email);
 }
 
 // ---------------------------
-// action اصلی - اصلاح شده
+// Main action
 // ---------------------------
 $action = $_GET['action'] ?? 'login';
 
@@ -255,16 +215,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'register') {
         setErrorAndRedirect('ایمیل یا شماره موبایل وارد شده قبلاً ثبت شده است!', 'auth.php?action=register');
     }
 
-    // ایجاد کاربر و سپس تولید توکن
     if (createUser(['name'=>$name,'email'=>$email,'phone'=>$phone])) {
-        // تولید و ارسال توکن
         $tokenResult = getOrCreateToken($email);
 
         if (empty($tokenResult)) {
             setErrorAndRedirect('خطا در تولید توکن، لطفا دوباره تلاش کنید.', 'auth.php?action=register');
         }
 
-        // ارسال توکن به کاربر
         if (!sendTokenByEmail($email, $tokenResult['token'])) {
             setErrorAndRedirect('خطا در ارسال ایمیل، لطفا دوباره تلاش کنید.', 'auth.php?action=register');
         }
@@ -278,7 +235,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'register') {
     }
 }
 
-// پردازش صفحه تأیید
+// ---------------------------
+// Verify page
+// ---------------------------
 if ($action === 'verify') {
     if (empty($_SESSION['email'])) {
         setErrorAndRedirect('ابتدا باید ثبت‌نام کنید یا وارد شوید!', 'auth.php?action=login');
@@ -290,7 +249,6 @@ if ($action === 'verify') {
         setErrorAndRedirect('ابتدا باید ثبت‌نام کنید یا وارد شوید!', 'auth.php?action=login');
     }
 
-    // اگر درخواست ارسال مجدد توکن باشد
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['resend_token'])) {
         $tokenResult = getOrCreateToken($email);
 
@@ -298,7 +256,6 @@ if ($action === 'verify') {
             setErrorAndRedirect('خطا در تولید توکن، لطفا دوباره تلاش کنید.', 'auth.php?action=verify');
         }
 
-        // ارسال توکن به کاربر
         if (!sendTokenByEmail($email, $tokenResult['token'])) {
             setErrorAndRedirect('خطا در ارسال ایمیل، لطفا دوباره تلاش کنید.', 'auth.php?action=verify');
         }
@@ -308,7 +265,6 @@ if ($action === 'verify') {
         redirect('auth.php?action=verify');
     }
 
-    // اگر کد تأیید ارسال شده باشد
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_code'])) {
         $enteredCode = trim($_POST['code'] ?? '');
 
@@ -316,13 +272,10 @@ if ($action === 'verify') {
             setErrorAndRedirect('لطفاً کد تأیید را وارد کنید!', 'auth.php?action=verify');
         }
 
-        // بررسی صحت کد
         if (isset($_SESSION['hash']) && verifyToken($_SESSION['hash'], $enteredCode)) {
-            // کد صحیح است
             $_SESSION['verified'] = true;
             $_SESSION['success'] = 'احراز هویت با موفقیت انجام شد!';
 
-            // حذف توکن استفاده شده
             dbExecute("DELETE FROM tokens WHERE hash = :hash", [':hash' => $_SESSION['hash']]);
             unset($_SESSION['hash']);
 
@@ -337,7 +290,7 @@ if ($action === 'verify') {
 }
 
 // ---------------------------
-// بارگذاری صفحه مناسب
+// Load view
 // ---------------------------
 $file = match ($action) {
     'register' => 'template/register.php',

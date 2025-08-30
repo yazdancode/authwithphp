@@ -90,7 +90,7 @@ if (!function_exists('deleteUser')) {
 }
 
 // ----------------------------------
-// Token helpers - کاملاً اصلاح شده
+// Token helpers - اصلاح شده
 // ----------------------------------
 if (!function_exists('generateToken')) {
     function generateToken(string $email, int $length = 32): array {
@@ -103,18 +103,19 @@ if (!function_exists('generateToken')) {
 
             $hash = bin2hex(random_bytes($length));
             $token = random_int(100000, 999999);
-            $expiresAt = date("Y-m-d H:i:s", time() + 600); // 10 minutes expiry
+            $expiresAt = date("Y-m-d H:i:s", time() + 600); // 10 دقیقه اعتبار
 
             // ابتدا هر توکن قدیمی برای این ایمیل را حذف کنید
             dbExecute("DELETE FROM tokens WHERE email = :email", [':email' => $email]);
 
             // سپس توکن جدید را اضافه کنید
-            $sql = "INSERT INTO tokens (email, token, hash, create_at) VALUES (:email, :token, :hash, :create_at)";
+            $sql = "INSERT INTO tokens (email, token, hash, expires_at, created_at) 
+                    VALUES (:email, :token, :hash, :expires_at, NOW())";
             $success = dbExecute($sql, [
-                ':email' => $email,
-                ':token' => $token,
-                ':hash' => $hash,
-                ':create_at' => $expiresAt
+                ':email'      => $email,
+                ':token'      => $token,
+                ':hash'       => $hash,
+                ':expires_at' => $expiresAt
             ]);
 
             if (!$success) {
@@ -142,7 +143,7 @@ if (!function_exists('isAliveToken')) {
         if (!$token) {
             return false;
         }
-        return strtotime($token['create_at']) > time();
+        return strtotime($token['expires_at']) > time();
     }
 }
 
@@ -151,25 +152,14 @@ if (!function_exists('sendTokenByEmail')) {
         global $phpmailer;
 
         try {
-            // Clear previous recipients
             $phpmailer->clearAddresses();
-
-            // Add recipient
             $phpmailer->addAddress($email);
 
-            // Email content
             $phpmailer->Subject = 'کد تأیید 7auth';
             $phpmailer->Body = "<h1>کد تأیید شما: $token</h1><p>این کد تا ۱۰ دقیقه معتبر است.</p>";
             $phpmailer->isHTML(true);
 
-            // Attempt to send email
-            if ($phpmailer->send()) {
-                return true;
-            }
-
-            error_log('Email sending error: ' . $phpmailer->ErrorInfo);
-            return false;
-
+            return $phpmailer->send();
         } catch (Exception $e) {
             error_log('Email exception: ' . $e->getMessage());
             return false;
@@ -178,7 +168,7 @@ if (!function_exists('sendTokenByEmail')) {
 }
 
 // ----------------------------------
-// تابع کمکی برای ریدایرکت
+// Redirect helpers
 // ----------------------------------
 if (!function_exists('redirect')) {
     #[NoReturn]
@@ -188,9 +178,6 @@ if (!function_exists('redirect')) {
     }
 }
 
-// ----------------------------------
-// تابع کمکی برای تنظیم خطا و ریدایرکت
-// ----------------------------------
 if (!function_exists('setErrorAndRedirect')) {
     #[NoReturn]
     function setErrorAndRedirect(string $error, string $url): void {
@@ -200,7 +187,7 @@ if (!function_exists('setErrorAndRedirect')) {
 }
 
 // ----------------------------------
-// تابع اصلی برای پردازش ثبت‌نام و ارسال توکن
+// Main process registration
 // ----------------------------------
 #[NoReturn]
 function processRegistration(array $userData): void {
@@ -216,7 +203,6 @@ function processRegistration(array $userData): void {
         setErrorAndRedirect('خطا در تولید توکن، لطفا دوباره تلاش کنید.', 'auth.php?action=register');
     }
 
-    // ارسال ایمیل
     if (!sendTokenByEmail($userData['email'], $tokenData['token'])) {
         setErrorAndRedirect('خطا در ارسال ایمیل، لطفا دوباره تلاش کنید.', 'auth.php?action=register');
     }
