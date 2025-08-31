@@ -112,10 +112,8 @@ if (!function_exists('generateToken')) {
             $token = random_int(100000, 999999);
             $expiresAt = date("Y-m-d H:i:s", time() + 600); // 10 minutes expiry
 
-            // حذف توکن‌های قبلی
             dbExecute("DELETE FROM tokens WHERE email = :email", [':email' => $email]);
 
-            // درج توکن جدید
             $sql = "INSERT INTO tokens (email, token, hash, expires_at, created_at) 
                     VALUES (:email, :token, :hash, :expires_at, NOW())";
             $success = dbExecute($sql, [
@@ -279,7 +277,8 @@ if ($action === 'verify') {
             dbExecute("DELETE FROM tokens WHERE hash = :hash", [':hash' => $_SESSION['hash']]);
             unset($_SESSION['hash']);
 
-            redirect('dashboard.php');
+            // تغییر اینجا:
+            redirect('auth.php?action=dashboard');
         } else {
             setErrorAndRedirect('کد تأیید نامعتبر یا منقضی شده است!', 'auth.php?action=verify');
         }
@@ -293,9 +292,11 @@ if ($action === 'verify') {
 // Load view
 // ---------------------------
 $file = match ($action) {
-    'register' => 'template/register.php',
-    'verify'   => 'template/verify.php',
-    default    => 'template/login.php',
+    'register'  => 'template/register.php',
+    'verify'    => 'template/verify.php',
+    'dashboard' => 'template/dashboard.php',
+    'profile'   => 'template/profile.php',
+    default     => 'template/login.php',
 };
 
 if (file_exists($file)) {
